@@ -3,16 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Игра</title>
+<title>Mines</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-  }
-
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
     --bg: var(--tg-theme-bg-color, #17212b);
     --card: var(--tg-theme-secondary-bg-color, #232e3c);
@@ -21,240 +15,485 @@
     --accent: var(--tg-theme-button-color, #2ea6ff);
     --accent-text: var(--tg-theme-button-text-color, #ffffff);
   }
-
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
+  html, body { min-height: 100%; background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    flex-direction: column;
-    user-select: none;
+    user-select: none; }
+  body {
     padding: 16px;
     padding-top: calc(16px + env(safe-area-inset-top));
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
-    gap: 16px;
+    display: flex; flex-direction: column; min-height: 100vh; gap: 16px;
   }
 
-  /* ===== Верхняя панель ===== */
-  .topbar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
+  /* Topbar */
+  .topbar { display: flex; justify-content: flex-end; align-items: center; }
   .wallet {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--card);
-    border-radius: 999px;
-    padding: 8px 10px 8px 14px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border-radius: 999px; padding: 8px 10px 8px 14px;
     box-shadow: 0 2px 12px rgba(0,0,0,.25);
   }
-
-  .coin-icon {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-  }
-
-  .balance {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: .3px;
-    min-width: 26px;
-    text-align: right;
-  }
-
-  .currency {
-    font-size: 13px;
-    color: var(--hint);
-    font-weight: 500;
-    margin-right: 2px;
-  }
-
+  .coin-icon { width: 22px; height: 22px; flex-shrink: 0; }
+  .balance { font-size: 16px; font-weight: 700; letter-spacing: .3px; min-width: 26px; text-align: right; }
+  .currency { font-size: 13px; color: var(--hint); font-weight: 500; margin-right: 2px; }
   .topup-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    display: flex; align-items: center; gap: 4px;
     background: linear-gradient(135deg, #ffb547, #ff8a00);
-    color: #1a1a1a;
-    border: none;
-    border-radius: 999px;
-    padding: 6px 12px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
+    color: #1a1a1a; border: none; border-radius: 999px;
+    padding: 6px 12px; font-size: 14px; font-weight: 800; cursor: pointer;
     transition: transform .12s ease, filter .12s ease;
   }
+  .topup-btn:active { transform: scale(.94); filter: brightness(.9); }
 
-  .topup-btn:active {
-    transform: scale(.94);
-    filter: brightness(.9);
-  }
-
-  .star {
-    font-size: 14px;
-    line-height: 1;
-  }
-
-  /* ===== Основная область ===== */
-  .content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 18px;
-  }
-
+  /* Menu */
+  .menu { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 18px; }
   .play-btn {
-    width: 100%;
-    max-width: 340px;
-    padding: 20px;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    color: var(--accent-text);
-    background: var(--accent);
-    border: none;
-    border-radius: 18px;
-    cursor: pointer;
+    width: 100%; max-width: 340px; padding: 22px;
+    font-size: 20px; font-weight: 700; letter-spacing: .5px;
+    color: var(--accent-text); background: var(--accent);
+    border: none; border-radius: 18px; cursor: pointer;
     box-shadow: 0 8px 24px rgba(46, 166, 255, .35);
-    transition: transform .12s ease, filter .12s ease, box-shadow .2s ease;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .play-btn:active { transform: scale(.97); filter: brightness(.9); }
+
+  .hidden { display: none !important; }
+
+  /* Game */
+  .game-screen { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--card); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .stat span { font-size: 11px; color: var(--hint); text-transform: uppercase; letter-spacing: .5px; }
+  .stat b { font-size: 17px; font-weight: 700; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+  .cell {
+    background: var(--card); border: none; border-radius: 7px;
+    color: var(--text); font-size: 12px; font-weight: 700;
+    cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, transform .1s;
+    font-family: inherit;
+  }
+  .cell:active:not(.open):not(.mine) { transform: scale(.9); }
+  .cell.open {
+    background: rgba(46, 166, 255, .22); color: var(--accent);
+    cursor: default; box-shadow: inset 0 0 0 1px rgba(46, 166, 255, .35);
+  }
+  .cell.mine {
+    background: linear-gradient(135deg, #ff3b30, #c62828);
+    color: #fff; cursor: default; box-shadow: 0 0 16px rgba(255,59,48,.6);
   }
 
-  .play-btn:active {
-    transform: scale(.97);
-    filter: brightness(.9);
-    box-shadow: 0 4px 12px rgba(46, 166, 255, .3);
+  .game-actions { display: flex; gap: 10px; margin-top: auto; }
+  .btn {
+    flex: 1; padding: 16px; font-size: 16px; font-weight: 700;
+    border: none; border-radius: 14px; cursor: pointer; font-family: inherit;
+    transition: transform .12s, filter .12s;
   }
+  .btn:active { transform: scale(.97); filter: brightness(.92); }
+  .btn-green {
+    background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, .35);
+  }
+  .btn-green:disabled { background: var(--card); color: var(--hint); box-shadow: none; cursor: not-allowed; }
+  .btn-ghost { flex: 0 0 auto; background: var(--card); color: var(--text); padding: 16px 22px; }
 
-  /* ===== Тост ===== */
+  /* Overlay */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+    z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .overlay-card {
+    background: var(--card); border-radius: 20px; padding: 26px 22px;
+    width: 100%; max-width: 320px; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .overlay-card h2 { font-size: 22px; margin-bottom: 8px; }
+  .overlay-card p  { font-size: 15px; color: var(--hint); margin-bottom: 20px; line-height: 1.45; }
+  .overlay-card .btn { width: 100%; }
+
+  /* Toast */
   .toast {
-    position: fixed;
-    left: 50%;
+    position: fixed; left: 50%;
     bottom: calc(32px + env(safe-area-inset-bottom));
     transform: translate(-50%, 20px);
-    background: var(--card);
-    color: var(--text);
-    padding: 12px 22px;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 500;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .25s ease, transform .25s ease;
+    background: var(--card); color: var(--text);
+    padding: 12px 22px; border-radius: 14px;
+    font-size: 15px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
     box-shadow: 0 6px 24px rgba(0,0,0,.35);
-    z-index: 10;
+    z-index: 200; max-width: 90vw; text-align: center;
   }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-  .toast.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
+  /* Loader */
+  .loader {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500; color: var(--hint); font-size: 14px;
   }
+  .loader.hidden { display: none; }
 </style>
 </head>
 <body>
 
-  <!-- Верхняя панель: валюта -->
-  <div class="topbar">
-    <div class="wallet">
-      <svg class="coin-icon" viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="11" fill="#FFB547"/>
-        <circle cx="12" cy="12" r="8.5" fill="#FFD280"/>
-        <text x="12" y="16.5" font-size="11" font-weight="700"
-              text-anchor="middle" fill="#8A5A00" font-family="Arial, sans-serif">₵</text>
-      </svg>
-      <span class="currency">coins</span>
-      <span class="balance" id="balance">0</span>
-      <button class="topup-btn" id="topupBtn">
-        <span class="star">⭐</span>
-        <span>5</span>
-      </button>
-    </div>
-  </div>
+<script>
+  // ⚙️ УКАЖИТЕ URL BACKEND ЗДЕСЬ (без слэша на конце)
+  window.BACKEND_URL = "https://your-backend.example.com";
+</script>
 
-  <!-- Кнопка Играть -->
-  <div class="content">
-    <button class="play-btn" id="playBtn">Играть</button>
+<!-- topbar -->
+<div class="topbar">
+  <div class="wallet">
+    <svg class="coin-icon" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="11" fill="#FFB547"/>
+      <circle cx="12" cy="12" r="8.5" fill="#FFD280"/>
+      <text x="12" y="16.5" font-size="11" font-weight="700"
+            text-anchor="middle" fill="#8A5A00" font-family="Arial, sans-serif">₵</text>
+    </svg>
+    <span class="currency">coins</span>
+    <span class="balance" id="balance">—</span>
+    <button class="topup-btn" id="topupBtn"><span>⭐</span><span>5</span></button>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- menu -->
+<div class="menu" id="menuScreen">
+  <button class="play-btn" id="playBtn">Играть</button>
+</div>
+
+<!-- game -->
+<div class="game-screen hidden" id="gameScreen">
+  <div class="stats">
+    <div class="stat"><span>Множитель</span><b id="statMult">1.00x</b></div>
+    <div class="stat"><span>Сумма</span><b id="statSum">0</b></div>
+    <div class="stat"><span>Выплата</span><b id="statPot">0</b></div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="game-actions">
+    <button class="btn btn-green" id="cashoutBtn" disabled>Забрать</button>
+    <button class="btn btn-ghost" id="backBtn">Выйти</button>
+  </div>
+</div>
+
+<!-- overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-card">
+    <h2 id="ovTitle">Результат</h2>
+    <p id="ovText"></p>
+    <button class="btn btn-green" id="ovBtn">Ок</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="loader" id="loader">Загрузка…</div>
 
 <script>
+(() => {
+  "use strict";
+
   const tg = window.Telegram?.WebApp;
   if (tg) {
     tg.ready();
     tg.expand();
-    tg.setHeaderColor?.('secondary_bg_color');
-    tg.setBackgroundColor?.('#17212b');
+    tg.setHeaderColor?.("secondary_bg_color");
+    tg.setBackgroundColor?.("#17212b");
     tg.disableVerticalSwipes?.();
   }
 
-  const balanceEl = document.getElementById('balance');
-  const toastEl   = document.getElementById('toast');
+  const BACKEND_URL = (window.BACKEND_URL || "").replace(/\/$/, "");
+  const INIT_DATA = tg?.initData || "";
 
-  // ---- Баланс (пока локально, позже заменить на данные из бэкенда) ----
-  let balance = Number(localStorage.getItem('coins_balance') || 0);
+  const $ = (id) => document.getElementById(id);
+  const balanceEl = $("balance");
+  const toastEl   = $("toast");
+  const loaderEl  = $("loader");
+
+  // ---- utils ----
+  let toastTimer;
+  function toast(text, ms = 2000) {
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), ms);
+  }
+
+  function haptic(type) {
+    if (!tg?.HapticFeedback) return;
+    try {
+      if (type === "success" || type === "error") tg.HapticFeedback.notificationOccurred(type);
+      else tg.HapticFeedback.impactOccurred(type || "light");
+    } catch (_) {}
+  }
+
+  async function api(path, body = {}) {
+    if (!BACKEND_URL) throw new Error("BACKEND_URL не задан");
+    const res = await fetch(BACKEND_URL + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, initData: INIT_DATA }),
+    });
+    let data;
+    try { data = await res.json(); } catch { data = { ok: false, error: "bad_json" }; }
+    return data;
+  }
+
+  // ---- state ----
+  let user = null;
+  let gameId = null;
+  let gameActive = false;
+  let TOTAL_CELLS = 81;
 
   function renderBalance() {
-    balanceEl.textContent = balance.toLocaleString('ru-RU');
+    const v = user?.coins ?? 0;
+    balanceEl.textContent = Number(v).toLocaleString("ru-RU");
   }
 
-  function setBalance(value) {
-    balance = Math.max(0, Math.round(value));
-    localStorage.setItem('coins_balance', balance);
-    renderBalance();
-  }
-
-  let toastTimer;
-  function toast(text) {
-    toastEl.textContent = text;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
-  }
-
-  // ---- Пополнение за 5 звёзд ----
-  const TOPUP_AMOUNT = 100;   // сколько coins начислить за 5 звёзд
-  const TOPUP_PRICE  = 5;     // цена в Telegram Stars
-
-  document.getElementById('topupBtn').addEventListener('click', () => {
-    if (tg?.showConfirm) {
-      tg.showConfirm(`Пополнить на ${TOPUP_AMOUNT} coins за ${TOPUP_PRICE} ⭐?`, (ok) => {
-        if (ok) processTopup();
-      });
-    } else {
-      processTopup();
+  // ---- user ----
+  async function loadUser() {
+    try {
+      const data = await api("/api/user");
+      if (data.ok) { user = data.user; renderBalance(); return true; }
+      toast(data.error === "unauthorized" ? "Откройте через Telegram" : "Ошибка профиля");
+      return false;
+    } catch (e) {
+      console.error(e);
+      toast("Нет связи с сервером");
+      return false;
     }
-  });
-
-  function processTopup() {
-    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-
-    // ⚠️ Здесь нужно вызвать ваш бэкенд, который создаст счёт
-    // на оплату через Telegram Stars (sendInvoice / createInvoiceLink).
-    // После успешной оплаты бот пришлёт вебхук → начислите coins.
-
-    setBalance(balance + TOPUP_AMOUNT);
-    toast(`+${TOPUP_AMOUNT} coins ⭐`);
   }
 
-  // ---- Играть ----
-  document.getElementById('playBtn').addEventListener('click', () => {
-    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+  // ---- topup ----
+  $("topupBtn").addEventListener("click", doTopup);
 
-    // ⚠️ Здесь логика запуска игры
-    toast('Игра запускается…');
-  });
+  async function doTopup() {
+    let data;
+    try { data = await api("/api/topup/create"); }
+    catch (e) { return toast("Ошибка сети"); }
+    if (!data.ok) return toast("Не удалось создать счёт");
 
-  renderBalance();
+    if (!tg?.openInvoice) {
+      // Browser fallback
+      window.open(data.invoice_url, "_blank", "noopener");
+      toast("Откройте ссылку для оплаты");
+      return;
+    }
+
+    tg.openInvoice(data.invoice_url, async (status) => {
+      if (status === "paid") {
+        haptic("success");
+        toast("Оплата получена, обновляем баланс…");
+        // вебхук может прийти чуть позже — пробуем несколько раз
+        for (let i = 0; i < 5; i++) {
+          await new Promise(r => setTimeout(r, 800));
+          await loadUser();
+          if (user?.coins) break;
+        }
+      } else if (status === "cancelled") {
+        toast("Оплата отменена");
+      } else if (status === "failed") {
+        haptic("error");
+        toast("Оплата не прошла");
+      }
+    });
+  }
+
+  // ---- game ----
+  const menuScreen = $("menuScreen");
+  const gameScreen = $("gameScreen");
+  const gridEl     = $("grid");
+  const statMult   = $("statMult");
+  const statSum    = $("statSum");
+  const statPot    = $("statPot");
+  const cashoutBtn = $("cashoutBtn");
+
+  function showMenu() {
+    menuScreen.classList.remove("hidden");
+    gameScreen.classList.add("hidden");
+  }
+  function showGame() {
+    menuScreen.classList.add("hidden");
+    gameScreen.classList.remove("hidden");
+  }
+
+  function setStats(mult, sum, pot) {
+    statMult.textContent = (mult > 0 ? mult.toFixed(2) : "0.00") + "x";
+    statSum.textContent  = Number(sum).toLocaleString("ru-RU");
+    statPot.textContent  = Number(pot).toLocaleString("ru-RU");
+  }
+
+  function renderGrid() {
+    gridEl.innerHTML = "";
+    for (let i = 0; i < TOTAL_CELLS; i++) {
+      const b = document.createElement("button");
+      b.className = "cell";
+      b.dataset.index = i;
+      b.addEventListener("click", () => onCellClick(i, b));
+      gridEl.appendChild(b);
+    }
+  }
+
+  async function startGame() {
+    let data;
+    try { data = await api("/api/game/start"); }
+    catch { return toast("Ошибка сети"); }
+
+    if (!data.ok) {
+      toast(data.message || "Не удалось начать игру");
+      return;
+    }
+
+    TOTAL_CELLS = data.total_cells;
+    gameId = data.game_id;
+    gameActive = true;
+    setStats(data.multiplier, data.sum, data.potential);
+    cashoutBtn.disabled = true;
+    renderGrid();
+    showGame();
+    haptic("light");
+  }
+
+  async function onCellClick(idx, btn) {
+    if (!gameActive || !gameId) return;
+    if (btn.classList.contains("open") || btn.classList.contains("mine")) return;
+
+    let data;
+    try { data = await api("/api/game/reveal", { game_id: gameId, index: idx }); }
+    catch { return toast("Ошибка сети"); }
+
+    if (!data.ok) {
+      if (data.error === "too_fast") return;
+      return toast(data.error || "Ошибка");
+    }
+
+    if (data.mine) {
+      gameActive = false;
+      haptic("error");
+      const cell = gridEl.querySelector(`.cell[data-index="${data.mine_index}"]`);
+      if (cell) { cell.classList.add("mine"); cell.textContent = "💣"; }
+      setStats(0, data.sum, 0);
+      cashoutBtn.disabled = true;
+      setTimeout(() => {
+        showOverlay(
+          "💥 Мина!",
+          `Вы потеряли ${Number(data.sum).toLocaleString("ru-RU")} и множитель.`,
+          "Заново",
+          () => startGame()
+        );
+      }, 550);
+      return;
+    }
+
+    btn.classList.add("open");
+    btn.textContent = data.value;
+    haptic("light");
+    setStats(data.multiplier, data.sum, data.potential);
+
+    if (data.auto_cashout) {
+      gameActive = false;
+      cashoutBtn.disabled = true;
+      user = data.user;
+      renderBalance();
+      haptic("success");
+      showOverlay(
+        "🏆 Максимум!",
+        `Все безопасные клетки открыты: +${data.payout} coins`,
+        "Отлично",
+        showMenu
+      );
+      return;
+    }
+
+    cashoutBtn.disabled = false;
+  }
+
+  async function cashout() {
+    if (!gameActive || !gameId) return;
+    let data;
+    try { data = await api("/api/game/cashout", { game_id: gameId }); }
+    catch { return toast("Ошибка сети"); }
+
+    if (!data.ok) return toast(data.error || "Ошибка");
+
+    gameActive = false;
+    cashoutBtn.disabled = true;
+    user = data.user;
+    renderBalance();
+    haptic("success");
+
+    showOverlay(
+      "🎉 Выигрыш!",
+      `${data.multiplier.toFixed(2)}x × ${data.sum} = +${data.payout} coins`,
+      "Отлично",
+      showMenu
+    );
+  }
+
+  async function exitGame() {
+    if (gameActive && gameId) {
+      const canCashout = !cashoutBtn.disabled;
+      if (canCashout) {
+        const ok = tg?.showConfirm
+          ? await new Promise(r => tg.showConfirm("Забрать выигрыш перед выходом?", r))
+          : confirm("Забрать выигрыш перед выходом?");
+        if (ok) return cashout();
+      }
+      try { await api("/api/game/cancel", { game_id: gameId }); } catch {}
+    }
+    gameActive = false;
+    gameId = null;
+    showMenu();
+  }
+
+  // ---- overlay ----
+  const overlayEl = $("overlay");
+  const ovTitle   = $("ovTitle");
+  const ovText    = $("ovText");
+  const ovBtn     = $("ovBtn");
+  let ovHandler = null;
+
+  function showOverlay(title, text, label, onClose) {
+    ovTitle.textContent = title;
+    ovText.textContent  = text;
+    ovBtn.textContent   = label || "Ок";
+    ovHandler = onClose || null;
+    overlayEl.classList.add("show");
+  }
+  function hideOverlay() {
+    overlayEl.classList.remove("show");
+    const h = ovHandler; ovHandler = null;
+    if (h) h();
+  }
+  ovBtn.addEventListener("click", hideOverlay);
+
+  // ---- bindings ----
+  $("playBtn").addEventListener("click", startGame);
+  cashoutBtn.addEventListener("click", cashout);
+  $("backBtn").addEventListener("click", exitGame);
+
+  // ---- init ----
+  (async function init() {
+    if (!INIT_DATA) {
+      loaderEl.textContent = "Откройте приложение через Telegram-бота";
+      return;
+    }
+    const ok = await loadUser();
+    loaderEl.classList.add("hidden");
+    if (!ok) return;
+  })();
+})();
 </script>
 </body>
 </html>
